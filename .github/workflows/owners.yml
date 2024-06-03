@@ -1,0 +1,27 @@
+name: Check Owners
+
+on:
+  push:
+    branches:
+      - main
+
+    steps:
+      # Checking authorization for Run Workflow action
+      - name: Check Authorization
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const authorizers = "${{ vars.WORKFLOW_RUN_AUTHORIZERS }}".split(",");
+            var flag = false;
+            for (const authorizer of authorizers) {
+              if (authorizer == "${{  github.actor }}") {
+                flag = true;
+                console.log("${{ github.actor }} has manually triggered workflow run.")
+                break;
+              }
+            }
+            if (flag == false) {
+              console.error("${{ github.actor }} is not allowed to run workflow manually.");
+              process.exit(1);
+            }
