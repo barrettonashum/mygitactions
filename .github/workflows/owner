@@ -1,0 +1,33 @@
+name: Check Owners
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check_owners:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Read owners list
+      id: owners
+      run: |
+        owners=$(cat owners.json)
+        echo "::set-output name=owners::$owners"
+
+    - name: Check owners
+      run: |
+        owners="$INPUT_OWNERS"
+        # Perform your checks here, for example:
+        if [[ $owners == "John" ]] || [[ $owners == "Jane" ]]; then
+          echo "Owners John or Jane found."
+        else
+          echo "No owners found."
+          exit 1
+        fi
+      env:
+        INPUT_OWNERS: ${{ steps.owners.outputs.owners }}
