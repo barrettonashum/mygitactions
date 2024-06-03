@@ -2,16 +2,11 @@ name: Sample Test Pipeline
 
 on:
   pull_request:
-    branches:
-      - test
 
 permissions:
   id-token: write
   contents: read
   pull-requests: write
-  
-env:
-  OWNERS: ${{ secrets.OWNERS }}
 
 jobs:
   test-job:
@@ -23,42 +18,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Request pull request review from owners
-      - name: Request review from owners
+      # Checking authorization for Run Workflow action
+      - name: Check Authorization
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const owners = process.env.OWNERS.split(',');
-            const { data: pullRequest } = await github.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number
-            });
-
-            for (const owner of owners) {
-              await github.pulls.createReviewRequest({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number,
-                reviewers: [owner]
-              });
+            const authorizers = "${{ secrets.WORKFLOW_RUN_AUTHORIZERS }}".split(",");
+            var flag = false;
+            for (const authorizer of authorizers) {
+              if (authorizer == "${{ github.actor }}") {
+                flag = true;
+                console.log("${{ github.actor }} has manually triggered workflow run.")
+                break;
+              }
             }
-
-      - name: wait for approval
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { data: reviews } = await github.pulls.listReviews({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number
-            });
-
-            const approved = reviews.some(review => review.state === 'APPROVED');
-            if (!approved) {
-              console.error('Approvals required before deployment.');
+            if (flag == false) {
+              console.error("${{ github.actor }} is not allowed to run workflow manually.");
               process.exit(1);
             }
 
@@ -66,6 +42,6 @@ jobs:
       - name: Run sample tests
         run: |
           echo "Running sample tests..."
-          echo "Sample test 1 passed!"
-          echo "Sample test 2 passed!"
+          echo "Sample1 test passed!"
+          echo "Sample2 test passed!"
           echo "All sample tests completed successfully!"
