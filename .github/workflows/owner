@@ -23,7 +23,7 @@ jobs:
       run: |
         owners="$INPUT_OWNERS"
         # Perform your checks here, for example:
-        if [[ $owners == "John" ]] || [[ $owners == "Jane" ]]; then
+        if [[ $owners == "barrettonashum" ]] || [[ $owners == "Jane" ]][[ $owners == "John" ]]; then
           echo "Owners John or Jane found."
         else
           echo "No owners found."
